@@ -1,10 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".Inicio">
+    android:layout_height="match_parent">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:text="Bienvenido al Rally Fotográfico"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/btnRegistro"
+        android:text="Registrarse"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/btnLogin"
+        android:text="Iniciar sesión"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp" />
+
+    <Button
+        android:id="@+id/btnGaleria"
+        android:text="Ver galería pública"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp" />
+
+    <Button
+        android:id="@+id/btnVerBases"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ver bases del concurso"
+        android:layout_marginTop="16dp"/>
+
+</LinearLayout>

@@ -13,16 +13,16 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class subida_foto extends AppCompatActivity {
+public class SubidaFoto extends AppCompatActivity {
 
     private ImageView imagePreview;
     private Button btnSeleccionar, btnSubir;
@@ -54,13 +54,46 @@ public class subida_foto extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
 
         btnSeleccionar.setOnClickListener(v -> seleccionarImagen());
-        btnSubir.setOnClickListener(v -> subirImagen());
+        btnSubir.setOnClickListener(v -> validarLimiteYSubir());
     }
 
     private void seleccionarImagen() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         filePickerLauncher.launch(intent);
     }
+
+    private void validarLimiteYSubir() {
+        String userId = auth.getCurrentUser().getUid();
+
+        db.collection("config").document("rally").get()
+                .addOnSuccessListener(configDoc -> {
+                    long limite = configDoc.contains("limiteFotos") ?
+                            configDoc.getLong("limiteFotos") : 5;
+
+                    long fechaFinSubida = configDoc.contains("fechaFinSubida") ?
+                            configDoc.getLong("fechaFinSubida") : Long.MAX_VALUE;
+
+                    long ahora = System.currentTimeMillis();
+                    if (ahora > fechaFinSubida) {
+                        Toast.makeText(this, "El plazo para subir fotos ha finalizado", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    db.collection("fotos")
+                            .whereEqualTo("userId", userId)
+                            .get()
+                            .addOnSuccessListener(fotos -> {
+                                if (fotos.size() >= limite) {
+                                    Toast.makeText(this, "Has alcanzado el máximo de " + limite + " fotos permitidas", Toast.LENGTH_LONG).show();
+                                } else {
+                                    subirImagen(); // Todo correcto, se permite subir
+                                }
+                            })
+                            .addOnFailureListener(e -> Toast.makeText(this, "Error al contar fotos", Toast.LENGTH_SHORT).show());
+                })
+                .addOnFailureListener(e -> Toast.makeText(this, "Error al obtener configuración", Toast.LENGTH_SHORT).show());
+    }
+
 
     private void subirImagen() {
         if (imageUri == null) {
@@ -85,17 +118,19 @@ public class subida_foto extends AppCompatActivity {
                     photoData.put("url", downloadUrl);
                     photoData.put("estado", "pendiente");
                     photoData.put("timestamp", System.currentTimeMillis());
+                    photoData.put("votos", 0);
 
-                    db.collection("photos").add(photoData)
+                    db.collection("fotos").add(photoData)
                             .addOnSuccessListener(documentReference -> {
                                 progressDialog.dismiss();
                                 Toast.makeText(this, "Foto subida. Esperando validación", Toast.LENGTH_LONG).show();
-                                finish(); // opcional
+                                finish();
                             })
                             .addOnFailureListener(e -> {
                                 progressDialog.dismiss();
                                 Toast.makeText(this, "Error al guardar en base de datos", Toast.LENGTH_SHORT).show();
                             });
+
                 }))
                 .addOnFailureListener(e -> {
                     progressDialog.dismiss();
